@@ -1,0 +1,29 @@
+<!-- frontend/index.html -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>3G Family</title>
+</head>
+<body>
+  <h1>Данис КУУУУУУУУ!!!</h1>
+  <div id="friends"></div>
+
+  <script>
+    fetch('http://localhost:3000/friends')
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('friends');
+        data.forEach(friend => {
+          const card = document.createElement('div');
+          card.innerHTML = `
+            <h2>${friend.name}</h2>
+            <a href="${friend.insta}" target="_blank">Instagram</a>
+            <hr/>
+          `;
+          container.appendChild(card);
+        });
+      });
+  </script>
+</body>
+</html>
