@@ -2,60 +2,82 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 
 function App() {
-  const [msg, setMsg] = useState('');
-  const [input, setInput] = useState('');
-  const [users, setUsers] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [newPost, setNewPost] = useState({ body: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Загрузка постов
   useEffect(() => {
-    fetch('/api/hello')
-      .then(res => res.json())
-      .then(data => setMsg(data.message));
+    fetchPosts();
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    fetch('/api/users')
-      .then(res => {
-        if (!res.ok) throw new Error('Ошибка сети');
-        return res.json();
-      })
-      .then(data => {
-        setUsers(data);
-        setError(null);
-      })
-      .catch(err => setError('Ошибка при загрузке пользователей: ' + err.message))
-      .finally(() => setLoading(false));
-  }, []);
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch('/posts');
+      if (!res.ok) throw new Error('Ошибка сети');
+      const data = await res.json();
+      setPosts(data);
+      setError(null);
+    } catch (err) {
+      setError('Ошибка при загрузке постов: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleSubmit = (e) => {
+  // Создание поста
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    fetch('/api/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: input })
-    })
-      .then(res => res.json())
-      .then(data => console.log(data));
+    try {
+      const res = await fetch('/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: '1', // Временное решение
+          userName: 'Аноним',
+          body: newPost.body
+        })
+      });
+      if (!res.ok) throw new Error('Ошибка при создании поста');
+      const savedPost = await res.json();
+      setPosts([savedPost, ...posts]);
+      setNewPost({ body: '' });
+    } catch (err) {
+      setError('Ошибка при создании поста: ' + err.message);
+    }
   };
 
   return (
     <div className="App">
-      <h1>Фронт+Бэк</h1>
-      <p>{msg}</p>
-      <form onSubmit={handleSubmit}>
-        <input value={input} onChange={e => setInput(e.target.value)} />
-        <button type="submit">Отправить</button>
+      <h1>Психоделический музей мыслей</h1>
+      
+      {/* Форма создания поста */}
+      <form onSubmit={handleSubmit} className="post-form">
+        <textarea
+          value={newPost.body}
+          onChange={e => setNewPost({ ...newPost, body: e.target.value })}
+          placeholder="Что у тебя на уме?"
+          maxLength={1000}
+        />
+        <button type="submit">Опубликовать</button>
       </form>
-      <h2>Пользователи</h2>
+
+      {/* Список постов */}
       {loading && <p>Загрузка...</p>}
-      {error && <p style={{color: 'red'}}>{error}</p>}
-      <ul>
-        {users.map(user => (
-          <li key={user._id}>{user.name}, {user.age} лет</li>
+      {error && <p className="error">{error}</p>}
+      
+      <div className="posts">
+        {posts.map(post => (
+          <div key={post._id} className="post">
+            <div className="post-header">
+              <img src={post.userImage} alt={post.userName} className="avatar" />
+              <span className="username">{post.userName}</span>
+            </div>
+            <p className="post-body">{post.body}</p>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
-//libs
+//imports
 const express = require('express')
 const mongoose = require('mongoose');
+const postsRouter = require('./routes/posts');
 //consts
 const app = express()
 const PORT = 3001
@@ -27,23 +28,9 @@ async function seedDB() {
 }
 
 // Эндпоинты
-app.get('/api/hello', (req, res) => {
-  res.json({ message: 'Здарова, frontend!' })
-})
 
-app.get('/api/users', async (req, res) => {
-  try {
-    const users = await User.find();
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/api/send', (req, res) => {
-  console.log('Принято от фронта:', req.body)
-  res.json({ status: 'ok' })
-})
+app.use(express.json());
+app.use('/posts', postsRouter);
 
 // Подключение к MongoDB и запуск сервера
 mongoose.connect(mongoURI)
